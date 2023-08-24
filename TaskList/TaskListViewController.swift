@@ -8,6 +8,11 @@
 import UIKit
 import CoreData
 
+enum AlertAction {
+    case addTask
+    case editTask(Int)
+}
+
 class TaskListViewController: UITableViewController {
     
     private let cellID = "task"
@@ -24,7 +29,11 @@ class TaskListViewController: UITableViewController {
     }
     
     private func addNewTask() {
-        showAlert(withTitle: "New Task", andMessage: "What do you want to do?")
+        showAlert(.addTask, withTitle: "New Task", andMessage: "What do you want to do?")
+    }
+    
+    private func editTask(_ at: Int) {
+        showAlert(.editTask(at), withTitle: "Update Task", andMessage: "You can update your task")
     }
     
     private func fetchData() {
@@ -37,17 +46,28 @@ class TaskListViewController: UITableViewController {
         }
     }
     
-    private func showAlert(withTitle title: String, andMessage message: String) {
+    private func showAlert(_ withAction: AlertAction, withTitle title: String, andMessage message: String) {
         let alert = UIAlertController(title: title, message: message, preferredStyle: .alert)
         let saveAction = UIAlertAction(title: "Save Task", style: .default) { [weak self] _ in
             guard let task = alert.textFields?.first?.text, !task.isEmpty else { return }
-            self?.save(task)
+            switch withAction {
+            case .addTask:
+                self?.save(task)
+            case .editTask(let at):
+                self?.update(task, index: at)
+            }
         }
         let cancelAction = UIAlertAction(title: "Cancel", style: .destructive)
         alert.addAction(saveAction)
         alert.addAction(cancelAction)
         alert.addTextField { textField in
-            textField.placeholder = "New Task"
+            switch withAction {
+            case .addTask:
+                textField.placeholder = "New Task"
+            case .editTask(let at):
+                let task = self.taskList[at]
+                textField.text = task.title
+            }
         }
         present(alert, animated: true)
     }
@@ -67,6 +87,12 @@ class TaskListViewController: UITableViewController {
                 print(error)
             }
         }
+    }
+    
+    private func update(_ taskName: String, index: Int) {
+        taskList[index].title = taskName
+        let indexPath = IndexPath(row: index, section: 0)
+        tableView.reloadRows(at: [indexPath], with: .automatic)
     }
 }
 
@@ -108,5 +134,12 @@ extension TaskListViewController {
         content.text = task.title
         cell.contentConfiguration = content
         return cell
+    }
+    
+    override func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
+        print(indexPath.row, taskList[indexPath.row])
+        editTask(indexPath.row)
+        
+        tableView.deselectRow(at: indexPath, animated: true)
     }
 }
