@@ -72,14 +72,7 @@ class TaskListViewController: UITableViewController {
         present(alert, animated: true)
     }
     
-    private func save(_ taskName: String) {
-        let task = Task(context: viewContext)
-        task.title = taskName
-        taskList.append(task)
-        
-        let indexPath = IndexPath(row: taskList.count - 1, section: 0)
-        tableView.insertRows(at: [indexPath], with: .automatic)
-        
+    private func saveContent() {
         if viewContext.hasChanges {
             do {
                 try viewContext.save()
@@ -89,10 +82,31 @@ class TaskListViewController: UITableViewController {
         }
     }
     
+    private func save(_ taskName: String) {
+        let task = Task(context: viewContext)
+        task.title = taskName
+        taskList.append(task)
+        
+        let indexPath = IndexPath(row: taskList.count - 1, section: 0)
+        tableView.insertRows(at: [indexPath], with: .automatic)
+        
+        saveContent()
+    }
+    
     private func update(_ taskName: String, index: Int) {
         taskList[index].title = taskName
         let indexPath = IndexPath(row: index, section: 0)
         tableView.reloadRows(at: [indexPath], with: .automatic)
+        saveContent()
+    }
+    
+    private func remove(_ at: Int) {
+        guard at > 0 && at < taskList.count else { return }
+        let indexPath = IndexPath(row: at, section: 0)
+        let task = taskList.remove(at: at)
+        tableView.deleteRows(at: [indexPath], with: .automatic)
+        viewContext.delete(task)
+        saveContent()
     }
 }
 
@@ -137,9 +151,19 @@ extension TaskListViewController {
     }
     
     override func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
-        print(indexPath.row, taskList[indexPath.row])
         editTask(indexPath.row)
-        
         tableView.deselectRow(at: indexPath, animated: true)
     }
+    
+    override func tableView(_ tableView: UITableView, canEditRowAt indexPath: IndexPath) -> Bool {
+        true
+    }
+    
+    override func tableView(_ tableView: UITableView, trailingSwipeActionsConfigurationForRowAt indexPath: IndexPath) -> UISwipeActionsConfiguration? {
+        let delete = UIContextualAction(style: .destructive, title: "Del") { [weak self] _, _, _ in
+            self?.remove(indexPath.row)
+        }
+        return UISwipeActionsConfiguration(actions: [delete])
+    }
+    
 }
