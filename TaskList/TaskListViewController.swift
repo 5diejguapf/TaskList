@@ -16,7 +16,7 @@ class TaskListViewController: UITableViewController {
     
     private let cellID = "task"
     private let storage = StorageManager.shared
-    var taskList: [Task] = []
+    private var taskList: [Task] = []
     
 
     override func viewDidLoad() {
@@ -35,16 +35,15 @@ class TaskListViewController: UITableViewController {
         showAlert(.editTask(at), withTitle: "Update Task", andMessage: "You can update your task")
     }
     
-    
     private func showAlert(_ withAction: AlertAction, withTitle title: String, andMessage message: String) {
         let alert = UIAlertController(title: title, message: message, preferredStyle: .alert)
         let saveAction = UIAlertAction(title: "Save Task", style: .default) { _ in
-            guard let task = alert.textFields?.first?.text, !task.isEmpty else { return }
+            guard let taskTitle = alert.textFields?.first?.text, !taskTitle.isEmpty else { return }
             switch withAction {
             case .addTask:
-                self.add(task)
+                self.add(taskTitle)
             case .editTask(let at):
-                self.update(task, at: at)
+                self.update(taskTitle, at: at)
             }
         }
         
@@ -56,21 +55,20 @@ class TaskListViewController: UITableViewController {
             case .addTask:
                 textField.placeholder = "New Task"
             case .editTask(let at):
-                let task = self.taskList[at]
-                textField.text = task.title
+                textField.text = self.taskList[at].title
             }
         }
         present(alert, animated: true)
     }
     
-    private func add(_ taskName: String) {
-        taskList.append(storage.createTask(withTitle: taskName))
+    private func add(_ taskTitle: String) {
+        taskList.append(storage.createTask(withTitle: taskTitle))
         let indexPath = IndexPath(row: taskList.count - 1, section: 0)
         tableView.insertRows(at: [indexPath], with: .automatic)
     }
     
-    private func update(_ taskName: String, at: Int) {
-        taskList[at].title = taskName
+    private func update(_ taskTitle: String, at: Int) {
+        taskList[at].title = taskTitle
         storage.update()
         let indexPath = IndexPath(row: at, section: 0)
         tableView.reloadRows(at: [indexPath], with: .automatic)
