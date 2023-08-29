@@ -75,7 +75,7 @@ class TaskListViewController: UITableViewController {
     }
     
     private func remove(_ at: Int) {
-        guard at > 0 && at < taskList.count else { return }
+        guard at >= 0 && at < taskList.count else { return }
         let indexPath = IndexPath(row: at, section: 0)
         let task = taskList.remove(at: at)
         storage.delete(task: task)
