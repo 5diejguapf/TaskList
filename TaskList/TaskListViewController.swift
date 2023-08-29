@@ -6,7 +6,6 @@
 //
 
 import UIKit
-import CoreData
 
 enum AlertAction {
     case addTask
@@ -16,16 +15,16 @@ enum AlertAction {
 class TaskListViewController: UITableViewController {
     
     private let cellID = "task"
-    private var taskList: [Task] = []
+    private let storage = StorageManager.shared
+    var taskList: [Task] = []
     
-    private let viewContext = (UIApplication.shared.delegate as! AppDelegate).persistentContainer.viewContext
 
     override func viewDidLoad() {
         super.viewDidLoad()
         view.backgroundColor = .white
         tableView.register(UITableViewCell.self, forCellReuseIdentifier: cellID)
         setupNavigationBar()
-        fetchData()
+        taskList = storage.fetchData()
     }
     
     private func addNewTask() {
@@ -36,27 +35,19 @@ class TaskListViewController: UITableViewController {
         showAlert(.editTask(at), withTitle: "Update Task", andMessage: "You can update your task")
     }
     
-    private func fetchData() {
-        let fetchRequest = Task.fetchRequest()
-        
-        do {
-            taskList = try viewContext.fetch(fetchRequest)
-        } catch {
-            print(error)
-        }
-    }
     
     private func showAlert(_ withAction: AlertAction, withTitle title: String, andMessage message: String) {
         let alert = UIAlertController(title: title, message: message, preferredStyle: .alert)
-        let saveAction = UIAlertAction(title: "Save Task", style: .default) { [weak self] _ in
+        let saveAction = UIAlertAction(title: "Save Task", style: .default) { _ in
             guard let task = alert.textFields?.first?.text, !task.isEmpty else { return }
             switch withAction {
             case .addTask:
-                self?.save(task)
+                self.add(task)
             case .editTask(let at):
-                self?.update(task, index: at)
+                self.update(task, at: at)
             }
         }
+        
         let cancelAction = UIAlertAction(title: "Cancel", style: .destructive)
         alert.addAction(saveAction)
         alert.addAction(cancelAction)
@@ -72,41 +63,25 @@ class TaskListViewController: UITableViewController {
         present(alert, animated: true)
     }
     
-    private func saveContent() {
-        if viewContext.hasChanges {
-            do {
-                try viewContext.save()
-            } catch {
-                print(error)
-            }
-        }
-    }
-    
-    private func save(_ taskName: String) {
-        let task = Task(context: viewContext)
-        task.title = taskName
-        taskList.append(task)
-        
+    private func add(_ taskName: String) {
+        taskList.append(storage.createTask(withTitle: taskName))
         let indexPath = IndexPath(row: taskList.count - 1, section: 0)
         tableView.insertRows(at: [indexPath], with: .automatic)
-        
-        saveContent()
     }
     
-    private func update(_ taskName: String, index: Int) {
-        taskList[index].title = taskName
-        let indexPath = IndexPath(row: index, section: 0)
+    private func update(_ taskName: String, at: Int) {
+        taskList[at].title = taskName
+        storage.update()
+        let indexPath = IndexPath(row: at, section: 0)
         tableView.reloadRows(at: [indexPath], with: .automatic)
-        saveContent()
     }
     
     private func remove(_ at: Int) {
         guard at > 0 && at < taskList.count else { return }
         let indexPath = IndexPath(row: at, section: 0)
         let task = taskList.remove(at: at)
+        storage.delete(task: task)
         tableView.deleteRows(at: [indexPath], with: .automatic)
-        viewContext.delete(task)
-        saveContent()
     }
 }
 
