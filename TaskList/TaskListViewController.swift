@@ -24,7 +24,9 @@ class TaskListViewController: UITableViewController {
         view.backgroundColor = .white
         tableView.register(UITableViewCell.self, forCellReuseIdentifier: cellID)
         setupNavigationBar()
-        taskList = storage.fetchData()
+        storage.fetchData { [weak self] tasks in
+            self?.taskList = tasks
+        }
     }
     
     private func addNewTask() {
@@ -69,7 +71,7 @@ class TaskListViewController: UITableViewController {
     
     private func update(_ taskTitle: String, at: Int) {
         taskList[at].title = taskTitle
-        storage.update()
+        storage.update(task: taskList[at])
         let indexPath = IndexPath(row: at, section: 0)
         tableView.reloadRows(at: [indexPath], with: .automatic)
     }
@@ -133,7 +135,7 @@ extension TaskListViewController {
     }
     
     override func tableView(_ tableView: UITableView, trailingSwipeActionsConfigurationForRowAt indexPath: IndexPath) -> UISwipeActionsConfiguration? {
-        let delete = UIContextualAction(style: .destructive, title: "Del") { [weak self] _, _, _ in
+        let delete = UIContextualAction(style: .destructive, title: "Delete") { [weak self] _, _, _ in
             self?.remove(indexPath.row)
         }
         return UISwipeActionsConfiguration(actions: [delete])

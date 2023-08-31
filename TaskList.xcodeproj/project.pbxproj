@@ -61,7 +61,7 @@
 				A83A1D5229D9ECCA000B0D27 /* AppDelegate.swift */,
 				A83A1D5429D9ECCA000B0D27 /* SceneDelegate.swift */,
 				A83A1D5629D9ECCA000B0D27 /* TaskListViewController.swift */,
-				D5C798032A97DB4900C8FAD6 /* Utils */,
+				D5C798032A97DB4900C8FAD6 /* StorageService */,
 				A83A1D5E29D9ECCB000B0D27 /* Assets.xcassets */,
 				A83A1D6029D9ECCB000B0D27 /* LaunchScreen.storyboard */,
 				A83A1D6329D9ECCB000B0D27 /* Info.plist */,
@@ -70,12 +70,12 @@
 			path = TaskList;
 			sourceTree = "<group>";
 		};
-		D5C798032A97DB4900C8FAD6 /* Utils */ = {
+		D5C798032A97DB4900C8FAD6 /* StorageService */ = {
 			isa = PBXGroup;
 			children = (
 				D5C798002A97DB2800C8FAD6 /* Storage.swift */,
 			);
-			path = Utils;
+			path = StorageService;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
