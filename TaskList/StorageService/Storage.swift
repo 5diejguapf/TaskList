@@ -27,13 +27,12 @@ class StorageManager {
         viewContext = persistentContainer.viewContext
     }
     
-    func fetchData(completionHandler: @escaping ([Task]) -> Void) {
+    func fetchData(completionHandler: @escaping (Result<[Task], Error>) -> Void) {
         do {
             let tasks = try viewContext.fetch(Task.fetchRequest())
-            completionHandler(tasks)
-        } catch {
-            print(error)
-            completionHandler([])
+            completionHandler(.success(tasks))
+        } catch let error {
+            completionHandler(.failure(error))
         }
     }
     
@@ -48,14 +47,15 @@ class StorageManager {
         }
     }
     
-    func createTask(withTitle: String) -> Task {
+    func createTask(withTitle: String, completion: (Task) -> Void) {
         let task = Task(context: viewContext)
         task.title = withTitle
+        completion(task)
         saveContext()
-        return task
     }
     
-    func update(task: Task) {
+    func update(_ task: Task, title: String) {
+        task.title = title
         saveContext()
     }
     

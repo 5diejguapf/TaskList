@@ -17,24 +17,22 @@ class TaskListViewController: UITableViewController {
     private let cellID = "task"
     private let storage = StorageManager.shared
     private var taskList: [Task] = []
-    
 
     override func viewDidLoad() {
         super.viewDidLoad()
         view.backgroundColor = .white
         tableView.register(UITableViewCell.self, forCellReuseIdentifier: cellID)
         setupNavigationBar()
-        storage.fetchData { [weak self] tasks in
-            self?.taskList = tasks
+        
+        storage.fetchData { [weak self] fetchResult in
+            switch fetchResult {
+            case .success(let tasks):
+                self?.taskList = tasks
+            case .failure(let error):
+                print(error)
+                self?.taskList = []
+            }
         }
-    }
-    
-    private func addNewTask() {
-        showAlert(.addTask, withTitle: "New Task", andMessage: "What do you want to do?")
-    }
-    
-    private func editTask(_ at: Int) {
-        showAlert(.editTask(at), withTitle: "Update Task", andMessage: "You can update your task")
     }
     
     private func showAlert(_ withAction: AlertAction, withTitle title: String, andMessage message: String) {
@@ -64,14 +62,15 @@ class TaskListViewController: UITableViewController {
     }
     
     private func add(_ taskTitle: String) {
-        taskList.append(storage.createTask(withTitle: taskTitle))
+        storage.createTask(withTitle: taskTitle) { task in
+            taskList.append(task)
+        }
         let indexPath = IndexPath(row: taskList.count - 1, section: 0)
         tableView.insertRows(at: [indexPath], with: .automatic)
     }
     
     private func update(_ taskTitle: String, at: Int) {
-        taskList[at].title = taskTitle
-        storage.update(task: taskList[at])
+        storage.update(taskList[at], title: taskTitle)
         let indexPath = IndexPath(row: at, section: 0)
         tableView.reloadRows(at: [indexPath], with: .automatic)
     }
@@ -102,7 +101,7 @@ private extension TaskListViewController {
         navigationItem.rightBarButtonItem = UIBarButtonItem(
             systemItem: .add,
             primaryAction: UIAction { [unowned self] _ in
-                addNewTask()
+                showAlert(.addTask, withTitle: "New Task", andMessage: "What do you want to do?")
             }
         )
         
@@ -126,7 +125,7 @@ extension TaskListViewController {
     }
     
     override func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
-        editTask(indexPath.row)
+        showAlert(.editTask(indexPath.row), withTitle: "Update Task", andMessage: "You can update your task")
         tableView.deselectRow(at: indexPath, animated: true)
     }
     
@@ -140,5 +139,4 @@ extension TaskListViewController {
         }
         return UISwipeActionsConfiguration(actions: [delete])
     }
-    
 }
